@@ -1,8 +1,8 @@
 <?php
 // echo "hello world";
 ?>
-Worktime <input type="number" value="20" name="worktyme"> minutes<br/>
-Pausetime <input type="number" value="2" name="sleeptyme"> minutes<br/>
+Worktime <input type="number" value="20" id="worktyme"> minutes<br/>
+Pausetime <input type="number" value="2" id="sleeptyme"> minutes<br/>
 <button>Notify me!</button>
 <script>
 document.querySelector("button").addEventListener("click", notifyMe);
