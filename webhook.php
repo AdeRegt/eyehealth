@@ -27,9 +27,11 @@
         $data = json_decode($payload, true);
         
         // Voorbeeld: log de actie
-        file_put_contents('webhook.log', "Event: " . $_SERVER['HTTP_X_GITHUB_EVENT'] . PHP_EOL, FILE_APPEND);
+        file_put_contents(__DIR__.DIRECTORY_SEPARATOR."cgi-bin".DIRECTORY_SEPARATOR.'webhook.log', "Event: " . $_SERVER['HTTP_X_GITHUB_EVENT'] . PHP_EOL, FILE_APPEND);
         
         http_response_code(200);
+
+        exec("git stash && git fetch && git pull ");
     } else {
         // Validatie mislukt
         http_response_code(403);
