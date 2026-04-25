@@ -226,7 +226,7 @@
             canvas.style.opacity = 1 - lightFactor;
             document.getElementById('stars').style.opacity = 1 - (lightFactor * 1.2);
 
-            info.innerText = `Tijd: ${now.getHours()}:${mins.toString().padStart(2, '0')} | Lichtsterkte: ${Math.round(lightFactor * 100)}% | Mode: ${us.status} | Git: <?php echo file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . ".git" . DIRECTORY_SEPARATOR . "ORIG_HEAD") ?>`;
+            info.innerText = `Tijd: ${now.getHours()}:${mins.toString().padStart(2, '0')} | Mode: ${us.status} | Git: <?php echo file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . ".git" . DIRECTORY_SEPARATOR . "ORIG_HEAD") ?>`;
         } 
 
         // Helper functie om kleuren te mengen
