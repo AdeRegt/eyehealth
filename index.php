@@ -126,7 +126,7 @@
         _count: 0,
 
         get status(){
-          return this._status;
+          return this._status===0?"uninitialised":this._status;
         },
 
         set status(e){
