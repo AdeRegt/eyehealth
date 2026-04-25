@@ -32,19 +32,21 @@
         http_response_code(200);
 
         $ophaalurl = "https://raw.githubusercontent.com/" . $data["repository"]["full_name"] . "/" . $data["repository"]["master_branch"] . "/";
-        foreach($data["commits"]["added"] as $file){
-            echo "File $file added!<br/>";
-            file_put_contents(__DIR__ . DIRECTORY_SEPARATOR . $file, file_get_contents($ophaalurl . $file));
-        }
+        foreach($data["commits"] as $commit){
+            foreach($commit["added"] as $file){
+                echo "File $file added!<br/>";
+                file_put_contents(__DIR__ . DIRECTORY_SEPARATOR . $file, file_get_contents($ophaalurl . $file));
+            }
 
-        foreach($data["commits"]["removed"] as $file){
-            echo "File $file removed!<br/>";
-            unlink(__DIR__ . DIRECTORY_SEPARATOR . $file);
-        }
+            foreach($commit["removed"] as $file){
+                echo "File $file removed!<br/>";
+                unlink(__DIR__ . DIRECTORY_SEPARATOR . $file);
+            }
 
-        foreach($data["commits"]["modified"] as $file){
-            echo "File $file updated!<br/>";
-            file_put_contents(__DIR__ . DIRECTORY_SEPARATOR . $file, file_get_contents($ophaalurl . $file));
+            foreach($commit["modified"] as $file){
+                echo "File $file updated!<br/>";
+                file_put_contents(__DIR__ . DIRECTORY_SEPARATOR . $file, file_get_contents($ophaalurl . $file));
+            }
         }
 
     } else {

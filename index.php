@@ -120,6 +120,11 @@
       <h1 id="status"></h1>
       <h2 id="substatus"></h2>
     </div>
+    <div id="time-info">Laden...</div>
+    <div class="sky-overlay" id="sky"></div>
+    <div class="stars" id="stars"></div>
+    <canvas id="canvas"></canvas>
+    <div class="mountains" id="mtn"></div>
     <script>
       const us = {
         _status: 0,
@@ -180,17 +185,7 @@
         usg.pitch = 0.2;
         window.speechSynthesis.speak(usg);
       }
-    </script>
-
-
-
-
-    <div id="time-info">Laden...</div>
-    <div class="sky-overlay" id="sky"></div>
-    <div class="stars" id="stars"></div>
-    <canvas id="canvas"></canvas>
-    <div class="mountains" id="mtn"></div>
-    <script>
+      
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const info = document.getElementById('time-info');
