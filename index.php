@@ -32,8 +32,7 @@
         border-radius: 15px;
         color: white;
       }
-    </style>
-    <style>
+    
         :root {
             /* We gebruiken CSS variabelen die we met JS updaten */
             --cycle-factor: 0; 
@@ -108,6 +107,7 @@
             border-radius: 5px;
         }
     </style>
+    <title>Waiting | Eyes</title>
   </head>
   <body>
     <div class="dialog" id="begindialog">
@@ -185,7 +185,7 @@
         usg.pitch = 0.2;
         window.speechSynthesis.speak(usg);
       }
-      
+
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const info = document.getElementById('time-info');
