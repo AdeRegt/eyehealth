@@ -1,6 +1,15 @@
 <!DOCTYPE html>
-<html>
+<html lang="nl">
   <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Progressive Eye Health Monitoring Application">
+    <meta name="theme-color" content="#0c0d46">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Eyes">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23050b1a' width='192' height='192'/><circle cx='96' cy='96' r='60' fill='%2387ceeb'/><circle cx='96' cy='96' r='40' fill='%230c0d46'/><circle cx='96' cy='96' r='20' fill='white'/></svg>">
     <style>
 
       .dialog{
@@ -287,6 +296,40 @@
         }
 
         animate();
+    </script>
+
+    <!-- PWA Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+              console.log('Service Worker registered successfully:', registration);
+              
+              // Check for updates
+              registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                newWorker.addEventListener('statechange', () => {
+                  if (newWorker.state === 'activated') {
+                    console.log('New service worker activated');
+                    // Optionally notify user about update
+                    if (confirm('A new version is available! Reload to update?')) {
+                      window.location.reload();
+                    }
+                  }
+                });
+              });
+            })
+            .catch(error => console.error('Service Worker registration failed:', error));
+        });
+        
+        // Listen for messages from service worker
+        navigator.serviceWorker.addEventListener('message', (event) => {
+          if (event.data.type === 'UPDATE_AVAILABLE') {
+            console.log('Update available');
+          }
+        });
+      }
     </script>
 
   </body>
