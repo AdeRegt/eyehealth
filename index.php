@@ -20,14 +20,17 @@
         backdrop-filter: blur(5px);
         -webkit-backdrop-filter: blur(5px);
         border: 1px solid rgba(255, 255, 255, 0.3);
-        padding: 30px 40px;
+        padding: 25px 35px;
 
         position:fixed;
         top: 50%;
         left: 50%;
-        width:24em;
-        margin-top: -14em;
-        margin-left: -12em; 
+        width: 26em;
+        max-width: 90vw;
+        max-height: 90vh;
+        overflow-y: auto;
+        transform: translate(-50%, -50%);
+        margin: 0;
 
         z-index: 100;
         display: flex;
@@ -57,31 +60,54 @@
         flex-direction: column;
         align-items: flex-start;
         width: 100%;
-        margin-bottom: 12px;
-        font-size: 0.95rem;
+        margin-bottom: 10px;
+        font-size: 0.9rem;
         font-weight: 500;
       }
 
-      .dialog input[type="number"] {
+      .dialog input[type="number"], .dialog input[type="text"] {
         width: 100%;
         box-sizing: border-box;
-        margin-top: 5px;
-        padding: 8px 12px;
+        margin-top: 4px;
+        padding: 7px 10px;
         border-radius: 8px;
         border: 1px solid rgba(255, 255, 255, 0.4);
         background: rgba(0, 0, 0, 0.2);
         color: white;
-        font-size: 1rem;
+        font-size: 0.95rem;
         outline: none;
       }
 
-      .dialog input[type="number"]:focus {
+      .dialog input[type="number"]:focus, .dialog input[type="text"]:focus {
         border-color: #87ceeb;
       }
 
+      .pauses-config-container {
+        width: 100%;
+        max-height: 120px;
+        overflow-y: auto;
+        margin-bottom: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        padding: 5px;
+        background: rgba(0, 0, 0, 0.1);
+      }
+
+      .pause-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 6px;
+      }
+
+      .pause-row input {
+        flex: 1;
+        margin-top: 0 !important;
+      }
+
       .dialog button {
-        margin-top: 10px;
-        padding: 10px 24px;
+        margin-top: 8px;
+        padding: 9px 20px;
         border-radius: 8px;
         border: none;
         background: #87ceeb;
@@ -96,12 +122,32 @@
         background: #fff;
       }
 
+      .small-btn {
+        padding: 4px 10px !important;
+        font-size: 0.85rem !important;
+        margin-top: 0 !important;
+        background: rgba(255, 255, 255, 0.3) !important;
+        color: white !important;
+      }
+      .small-btn:hover {
+        background: rgba(255, 255, 255, 0.5) !important;
+      }
+
       /* SVG Cirkel Timer Stijlen */
+      .timers-wrapper {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+      }
+
       .timer-container {
         position: relative;
-        width: 160px;
-        height: 160px;
-        margin: 0 auto 15px auto;
+        width: 140px;
+        height: 140px;
+        margin: 0;
       }
 
       .timer-ring {
@@ -213,28 +259,64 @@
   </head>
   <body>
     <div class="dialog" id="begindialog">
-      <h1>Eye Health</h1>
-      <p style="margin: 5px 0 15px 0; font-size: 0.95rem; opacity: 0.9;">Configure your timer intervals and click begin</p>
+      <h1>Eye Health & Werkdag</h1>
+      <p style="margin: 3px 0 10px 0; font-size: 0.85rem; opacity: 0.9;">Configureer pauzes en oog-oefening timers</p>
+      
       <label>
-        Working duration (minutes):
+        Oog-oefening Werkduur (min):
         <input type="number" id="work-input" value="18" min="1" max="120">
       </label>
       <label>
-        Resting duration (minutes):
+        Oog-oefening Rustduur (min):
         <input type="number" id="rest-input" value="2" min="1" max="60">
       </label>
-      <button id="beginstart">Begin</button>
-    </div>
-    <div class="dialog" id="seconddialog">
-      <div class="timer-container">
-        <svg class="timer-ring" viewBox="0 0 160 160">
-          <circle class="timer-ring-bg" cx="80" cy="80" r="70"></circle>
-          <circle id="timer-progress" class="timer-ring-progress" cx="80" cy="80" r="70"></circle>
-        </svg>
-        <div class="timer-text" id="timer-time">00:00</div>
+
+      <div style="display: flex; gap: 8px; width: 100%;">
+        <label style="flex:1;">
+          Start werktijd:
+          <input type="text" id="workday-start" value="09:00">
+        </label>
+        <label style="flex:1;">
+          Eind werktijd:
+          <input type="text" id="workday-end" value="17:00">
+        </label>
       </div>
-      <h1 id="status"></h1>
-      <h2 id="substatus"></h2>
+
+      <label style="margin-top: 4px;">
+        Pauzes (tijdstip & duur in min):
+      </label>
+      <div class="pauses-config-container" id="pauses-config-list">
+        <!-- Dynamische pauze rijen worden hier toegevoegd -->
+      </div>
+      <button type="button" class="small-btn" id="add-pause-btn">+ Pauze toevoegen</button>
+
+      <button id="beginstart" style="margin-top: 12px;">Begin</button>
+    </div>
+
+    <div class="dialog" id="seconddialog">
+      <div class="timers-wrapper">
+        <!-- Oog-oefening timer cirkel -->
+        <div class="timer-container">
+          <svg class="timer-ring" viewBox="0 0 160 160">
+            <circle class="timer-ring-bg" cx="80" cy="80" r="70"></circle>
+            <circle id="timer-progress" class="timer-ring-progress" cx="80" cy="80" r="70"></circle>
+          </svg>
+          <div class="timer-text" id="timer-time" style="font-size: 1.2rem;">00:00</div>
+        </div>
+        
+        <!-- Werkdag voortgang cirkel -->
+        <div class="timer-container">
+          <svg class="timer-ring" viewBox="0 0 160 160">
+            <circle class="timer-ring-bg" cx="80" cy="80" r="70"></circle>
+            <circle id="workday-progress" class="timer-ring-progress" cx="80" cy="80" r="70" style="stroke: #55efc4;"></circle>
+          </svg>
+          <div class="timer-text" id="workday-time" style="font-size: 1rem; line-height: 1.2;">00:00<br><span style="font-size: 0.75rem; font-weight: normal; opacity: 0.9;" id="workday-subtext">resterend</span></div>
+        </div>
+      </div>
+
+      <h1 id="status" style="font-size: 1.5rem; margin: 5px 0 2px 0;"></h1>
+      <h2 id="substatus" style="font-size: 0.95rem;"></h2>
+      <div id="break-substatus" style="font-size: 0.85rem; margin-top: 4px; opacity: 0.9;"></div>
     </div>
     <div id="time-info">Laden...</div>
     <div class="sky-overlay" id="sky"></div>
@@ -247,6 +329,41 @@
 
       let workDurationSec = 1080; // default 18 min
       let restDurationSec = 120;  // default 2 min
+
+      let workdayConfig = {
+        start: "09:00",
+        end: "17:00",
+        pauses: [
+          { time: "13:00", duration: 30 }
+        ]
+      };
+
+      // Initialiseer standaard pauzes in de configuratie UI
+      function renderPausesConfig() {
+        const container = document.getElementById("pauses-config-list");
+        container.innerHTML = "";
+        workdayConfig.pauses.forEach((p, idx) => {
+          const row = document.createElement("div");
+          row.className = "pause-row";
+          row.innerHTML = `
+            <input type="text" class="pause-time" value="${p.time}" placeholder="HH:MM" title="Tijdstip">
+            <input type="number" class="pause-duration" value="${p.duration}" min="1" max="180" placeholder="Min" title="Duur in minuten">
+            <button type="button" class="small-btn remove-pause" style="background: rgba(255,100,100,0.4) !important;">×</button>
+          `;
+          row.querySelector(".remove-pause").addEventListener("click", () => {
+            workdayConfig.pauses.splice(idx, 1);
+            renderPausesConfig();
+          });
+          container.appendChild(row);
+        });
+      }
+
+      document.getElementById("add-pause-btn").addEventListener("click", () => {
+        workdayConfig.pauses.push({ time: "12:30", duration: 15 });
+        renderPausesConfig();
+      });
+
+      renderPausesConfig();
 
       const us = {
         _status: 0,
@@ -327,13 +444,146 @@
           let things = eee + " seconds left";
           document.getElementById("substatus").innerHTML = things;
           document.title = things;
+
+          // Update Werkdag Voortgangscirkel op basis van echte kloktijd
+          updateWorkdayProgress();
         }
 
       };
+
+      function parseTimeToMinutes(timeStr) {
+        const parts = timeStr.split(":");
+        if (parts.length !== 2) return 0;
+        return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+      }
+
+      function updateWorkdayProgress() {
+        const now = new Date();
+        const currentTotalMins = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
+
+        const startMins = parseTimeToMinutes(workdayConfig.start);
+        const endMins = parseTimeToMinutes(workdayConfig.end);
+
+        // Bereken totale netto werktijd (exclusief pauzes) en actuele voortgang
+        let totalPauseMins = 0;
+        workdayConfig.pauses.forEach(p => {
+          totalPauseMins += Number(p.duration);
+        });
+
+        const grossDayMins = endMins - startMins;
+        const netDayMins = Math.max(1, grossDayMins - totalPauseMins);
+
+        const workdayProgressCircle = document.getElementById("workday-progress");
+        const workdayTimeEl = document.getElementById("workday-time");
+        const workdaySubtextEl = document.getElementById("workday-subtext");
+        const breakSubstatusEl = document.getElementById("break-substatus");
+
+        const circumference = 439.82;
+
+        if (currentTotalMins < startMins) {
+          // Werkdag nog niet begonnen
+          if (workdayProgressCircle) workdayProgressCircle.style.strokeDashoffset = circumference;
+          const diffMins = Math.ceil(startMins - currentTotalMins);
+          if (workdayTimeEl) workdayTimeEl.innerHTML = `Start<br><span style="font-size:0.75rem">${workdayConfig.start}</span>`;
+          if (workdaySubtextEl) workdaySubtextEl.innerHTML = `over ${diffMins} min`;
+          if (breakSubstatusEl) breakSubstatusEl.innerHTML = `Werktijd start om ${workdayConfig.start}`;
+          return;
+        }
+
+        if (currentTotalMins >= endMins) {
+          // Werkdag voorbij
+          if (workdayProgressCircle) workdayProgressCircle.style.strokeDashoffset = 0;
+          if (workdayTimeEl) workdayTimeEl.innerHTML = `Klaar!`;
+          if (workdaySubtextEl) workdaySubtextEl.innerHTML = `werkdag voorbij`;
+          if (breakSubstatusEl) breakSubstatusEl.innerHTML = `Fijne avond!`;
+          return;
+        }
+
+        // Bepaal of we in een pauze zitten of aan het werk zijn
+        let inPause = false;
+        let currentPauseObj = null;
+        let nextPauseTime = null;
+        let timeToNextPause = Infinity;
+
+        // Sorteer pauzes op tijd
+        const sortedPauses = [...workdayConfig.pauses].map(p => ({
+          start: parseTimeToMinutes(p.time),
+          duration: Number(p.duration),
+          end: parseTimeToMinutes(p.time) + Number(p.duration),
+          rawTime: p.time
+        })).sort((a, b) => a.start - b.start);
+
+        let elapsedNetWorkMins = 0;
+        let passedPauseMins = 0;
+
+        for (const p of sortedPauses) {
+          if (currentTotalMins >= p.start && currentTotalMins < p.end) {
+            inPause = true;
+            currentPauseObj = p;
+            break;
+          } else if (currentTotalMins >= p.end) {
+            passedPauseMins += p.duration;
+          } else {
+            // Komende pauze
+            const t2p = (p.start - currentTotalMins) * 60; // in seconden
+            if (t2p < timeToNextPause) {
+              timeToNextPause = t2p;
+              nextPauseTime = p.rawTime;
+            }
+          }
+        }
+
+        if (inPause) {
+          const pauseRemainingSecs = Math.max(0, Math.ceil((currentPauseObj.end - currentTotalMins) * 60));
+          const pMins = Math.floor(pauseRemainingSecs / 60);
+          const pSecs = pauseRemainingSecs % 60;
+          if (workdayTimeEl) workdayTimeEl.innerHTML = `${String(pMins).padStart(2,'0')}:${String(pSecs).padStart(2,'0')}`;
+          if (workdaySubtextEl) workdaySubtextEl.innerHTML = `pauze (${currentPauseObj.rawTime})`;
+          if (breakSubstatusEl) breakSubstatusEl.innerHTML = `☕ Je hebt nu pauze tot ${Math.floor(currentPauseObj.end/60).toString().padStart(2,'0')}:${(currentPauseObj.end%60).toString().padStart(2,'0')}`;
+          
+          // Houd voortgangcirkel gelijk aan stand tijdens pauze
+          const netElapsed = Math.min(netDayMins, Math.max(0, (currentPauseObj.start - startMins) - passedPauseMins));
+          const fraction = netElapsed / netDayMins;
+          if (workdayProgressCircle) workdayProgressCircle.style.strokeDashoffset = circumference - (fraction * circumference);
+          return;
+        }
+
+        // Normale werktijd
+        let netElapsed = (currentTotalMins - startMins) - passedPauseMins;
+        netElapsed = Math.max(0, Math.min(netDayMins, netElapsed));
+
+        const fraction = netElapsed / netDayMins;
+        if (workdayProgressCircle) {
+          workdayProgressCircle.style.strokeDashoffset = circumference - (fraction * circumference);
+        }
+
+        const remainingNetMins = Math.max(0, Math.ceil(netDayMins - netElapsed));
+        const remH = Math.floor(remainingNetMins / 60);
+        const remM = remainingNetMins % 60;
+        const timeStr = remH > 0 ? `${remH}u ${remM}m` : `${remM}m`;
+
+        if (workdayTimeEl) workdayTimeEl.innerHTML = timeStr;
+        if (workdaySubtextEl) workdaySubtextEl.innerHTML = `werktijd over`;
+
+        let breakInfoText = `⏱️ Nog ${timeStr} werktijd te gaan.`;
+        if (nextPauseTime !== null && timeToNextPause !== Infinity) {
+          const npMins = Math.floor(timeToNextPause / 60);
+          const npH = Math.floor(npMins / 60);
+          const npRemM = npMins % 60;
+          const npStr = npH > 0 ? `${npH}u ${npRemM}m` : `${npRemM}m`;
+          breakInfoText += ` | Volgende pauze om ${nextPauseTime} (over ${npStr})`;
+        } else {
+          breakInfoText += ` | Geen pauzes meer vandaag.`;
+        }
+        if (breakSubstatusEl) breakSubstatusEl.innerHTML = breakInfoText;
+      }
+
       document.getElementById("seconddialog").style.display = "none";
       document.getElementById("beginstart").addEventListener("click",function(event){
         const workInput = parseInt(document.getElementById("work-input").value, 10);
         const restInput = parseInt(document.getElementById("rest-input").value, 10);
+        const startInput = document.getElementById("workday-start").value.trim();
+        const endInput = document.getElementById("workday-end").value.trim();
 
         if (!isNaN(workInput) && workInput > 0) {
           workDurationSec = workInput * 60;
@@ -341,6 +591,21 @@
         if (!isNaN(restInput) && restInput > 0) {
           restDurationSec = restInput * 60;
         }
+
+        if (startInput) workdayConfig.start = startInput;
+        if (endInput) workdayConfig.end = endInput;
+
+        // Lees alle dynamische pauze rijen uit
+        const pauseRows = document.querySelectorAll("#pauses-config-list .pause-row");
+        const newPauses = [];
+        pauseRows.forEach(row => {
+          const t = row.querySelector(".pause-time").value.trim();
+          const d = parseInt(row.querySelector(".pause-duration").value, 10);
+          if (t && !isNaN(d) && d > 0) {
+            newPauses.push({ time: t, duration: d });
+          }
+        });
+        workdayConfig.pauses = newPauses;
 
         document.getElementById("begindialog").style.display = "none";
         document.getElementById("seconddialog").style.display = "block";
