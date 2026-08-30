@@ -20,26 +20,76 @@
         backdrop-filter: blur(5px);
         -webkit-backdrop-filter: blur(5px);
         border: 1px solid rgba(255, 255, 255, 0.3);
-        padding: 50px;
+        padding: 40px;
 
         position:fixed;
         top: 50%;
         left: 50%;
-        width:30em;
-        height:18em;
-        margin-top: -9em;
-        margin-left: -15em; 
+        width:24em;
+        height:24em;
+        margin-top: -12em;
+        margin-left: -12em; 
 
         z-index: 100;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: white;
+        font-family: sans-serif;
       }
 
-      button{
-        background-color: #0c0d46;
-        padding: 20px;
+      .dialog h1 {
+        margin: 10px 0 5px 0;
+        font-size: 1.8rem;
+        text-transform: capitalize;
+      }
+
+      .dialog h2 {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: normal;
+        opacity: 0.9;
+      }
+
+      /* SVG Cirkel Timer Stijlen */
+      .timer-container {
+        position: relative;
+        width: 160px;
+        height: 160px;
+        margin: 0 auto 15px auto;
+      }
+
+      .timer-ring {
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg);
+      }
+
+      .timer-ring-bg {
+        fill: none;
+        stroke: rgba(255, 255, 255, 0.2);
+        stroke-width: 10;
+      }
+
+      .timer-ring-progress {
+        fill: none;
+        stroke: #87ceeb;
+        stroke-width: 10;
+        stroke-linecap: round;
+        stroke-dasharray: 439.82; /* 2 * pi * 70 */
+        stroke-dashoffset: 439.82;
+        transition: stroke-dashoffset 0.5s linear, stroke 0.5s ease;
+      }
+
+      .timer-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 1.5rem;
         font-weight: bold;
-        font-size: 30;
-        border-radius: 15px;
-        color: white;
       }
     
         :root {
@@ -125,7 +175,13 @@
       <button id="beginstart">Begin</button>
     </div>
     <div class="dialog" id="seconddialog">
-      <progress id="file" value="0" max="1320" ring="1200" style="width:100%"></progress> 
+      <div class="timer-container">
+        <svg class="timer-ring" viewBox="0 0 160 160">
+          <circle class="timer-ring-bg" cx="80" cy="80" r="70"></circle>
+          <circle id="timer-progress" class="timer-ring-progress" cx="80" cy="80" r="70"></circle>
+        </svg>
+        <div class="timer-text" id="timer-time">00:00</div>
+      </div>
       <h1 id="status"></h1>
       <h2 id="substatus"></h2>
     </div>
@@ -152,6 +208,16 @@
           }
           this._status = e;
           document.getElementById("status").innerHTML = e;
+          
+          // Update cirkelkleur op basis van status
+          const progressCircle = document.getElementById("timer-progress");
+          if (progressCircle) {
+            if (e === "working") {
+              progressCircle.style.stroke = "#87ceeb"; // Lichtblauw voor werk
+            } else if (e === "resting") {
+              progressCircle.style.stroke = "#ff7675"; // Zachte rood/oranje tint voor rust
+            }
+          }
         },
 
         get count(){
@@ -160,20 +226,51 @@
 
         set count(e){
           this._count = e;
-          document.getElementById("file").setAttribute("value",e);
-          if(e==document.getElementById("file").getAttribute("max")){
+          
+          const max = 1200; // 20 minuten totaal (18 min werken + 2 min rust)
+          const ringThreshold = 1080; // 18 minuten werken (1080 sec)
+          const restDuration = 120; // 2 minuten rust (120 sec)
+
+          if(e >= max){
             this.count = 0;
             return;
           }
+
           var eee = 0;
-          if(e<Number(document.getElementById("file").getAttribute("ring"))){
+          let progressFraction = 0;
+          const circumference = 439.82; // 2 * pi * 70
+
+          if(e < ringThreshold){
             this.status = "working";
-            eee = Number(document.getElementById("file").getAttribute("ring")) - e;
+            eee = ringThreshold - e;
+            // Cirkel vullen van 0 tot 1 tijdens de 18 minuten (1080 sec)
+            progressFraction = e / ringThreshold;
           }else{
             this.status = "resting";
-            eee = Number(document.getElementById("file").getAttribute("max")) - e;
+            eee = max - e;
+            // Cirkel leegmaken/vullen tijdens de 2 minuten rust (120 sec)
+            const restElapsed = e - ringThreshold;
+            progressFraction = 1 - (restElapsed / restDuration);
           }
-          things = eee + " seconds left";
+
+          // Update SVG cirkel dashoffset (van vol naar leeg of vice versa)
+          const progressCircle = document.getElementById("timer-progress");
+          if(progressCircle){
+            const offset = circumference - (progressFraction * circumference);
+            progressCircle.style.strokeDashoffset = offset;
+          }
+
+          // Formatteer seconden naar mm:ss
+          const minsLeft = Math.floor(eee / 60);
+          const secsLeft = eee % 60;
+          const timeFormatted = String(minsLeft).padStart(2, '0') + ":" + String(secsLeft).padStart(2, '0');
+          
+          const timerTimeEl = document.getElementById("timer-time");
+          if(timerTimeEl){
+            timerTimeEl.innerHTML = timeFormatted;
+          }
+
+          let things = eee + " seconds left";
           document.getElementById("substatus").innerHTML = things;
           document.title = things;
         }
