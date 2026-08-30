@@ -20,14 +20,13 @@
         backdrop-filter: blur(5px);
         -webkit-backdrop-filter: blur(5px);
         border: 1px solid rgba(255, 255, 255, 0.3);
-        padding: 40px;
+        padding: 30px 40px;
 
         position:fixed;
         top: 50%;
         left: 50%;
         width:24em;
-        height:24em;
-        margin-top: -12em;
+        margin-top: -14em;
         margin-left: -12em; 
 
         z-index: 100;
@@ -51,6 +50,50 @@
         font-size: 1.1rem;
         font-weight: normal;
         opacity: 0.9;
+      }
+
+      .dialog label {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+        margin-bottom: 12px;
+        font-size: 0.95rem;
+        font-weight: 500;
+      }
+
+      .dialog input[type="number"] {
+        width: 100%;
+        box-sizing: border-box;
+        margin-top: 5px;
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        background: rgba(0, 0, 0, 0.2);
+        color: white;
+        font-size: 1rem;
+        outline: none;
+      }
+
+      .dialog input[type="number"]:focus {
+        border-color: #87ceeb;
+      }
+
+      .dialog button {
+        margin-top: 10px;
+        padding: 10px 24px;
+        border-radius: 8px;
+        border: none;
+        background: #87ceeb;
+        color: #050b1a;
+        font-weight: bold;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      .dialog button:hover {
+        background: #fff;
       }
 
       /* SVG Cirkel Timer Stijlen */
@@ -170,8 +213,16 @@
   </head>
   <body>
     <div class="dialog" id="begindialog">
-      Begin the session by clicking on "begin"<br/>
-      <br/>
+      <h1>Eye Health</h1>
+      <p style="margin: 5px 0 15px 0; font-size: 0.95rem; opacity: 0.9;">Configure your timer intervals and click begin</p>
+      <label>
+        Working duration (minutes):
+        <input type="number" id="work-input" value="18" min="1" max="120">
+      </label>
+      <label>
+        Resting duration (minutes):
+        <input type="number" id="rest-input" value="2" min="1" max="60">
+      </label>
       <button id="beginstart">Begin</button>
     </div>
     <div class="dialog" id="seconddialog">
@@ -193,6 +244,9 @@
     <script>
       let audioUnlocked = false;
       const audioCache = {};
+
+      let workDurationSec = 1080; // default 18 min
+      let restDurationSec = 120;  // default 2 min
 
       const us = {
         _status: 0,
@@ -227,9 +281,9 @@
         set count(e){
           this._count = e;
           
-          const max = 1200; // 20 minuten totaal (18 min werken + 2 min rust)
-          const ringThreshold = 1080; // 18 minuten werken (1080 sec)
-          const restDuration = 120; // 2 minuten rust (120 sec)
+          const max = workDurationSec + restDurationSec;
+          const ringThreshold = workDurationSec;
+          const restDuration = restDurationSec;
 
           if(e >= max){
             this.count = 0;
@@ -243,12 +297,12 @@
           if(e < ringThreshold){
             this.status = "working";
             eee = ringThreshold - e;
-            // Cirkel vullen van 0 tot 1 tijdens de 18 minuten (1080 sec)
+            // Cirkel vullen van 0 tot 1 tijdens de werkperiode
             progressFraction = e / ringThreshold;
           }else{
             this.status = "resting";
             eee = max - e;
-            // Cirkel leegmaken/vullen tijdens de 2 minuten rust (120 sec)
+            // Cirkel leegmaken/vullen tijdens de rustperiode
             const restElapsed = e - ringThreshold;
             progressFraction = 1 - (restElapsed / restDuration);
           }
@@ -278,6 +332,16 @@
       };
       document.getElementById("seconddialog").style.display = "none";
       document.getElementById("beginstart").addEventListener("click",function(event){
+        const workInput = parseInt(document.getElementById("work-input").value, 10);
+        const restInput = parseInt(document.getElementById("rest-input").value, 10);
+
+        if (!isNaN(workInput) && workInput > 0) {
+          workDurationSec = workInput * 60;
+        }
+        if (!isNaN(restInput) && restInput > 0) {
+          restDurationSec = restInput * 60;
+        }
+
         document.getElementById("begindialog").style.display = "none";
         document.getElementById("seconddialog").style.display = "block";
         audioUnlocked = true;
