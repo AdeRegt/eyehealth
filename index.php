@@ -135,6 +135,9 @@
     <canvas id="canvas"></canvas>
     <div class="mountains" id="mtn"></div>
     <script>
+      let audioUnlocked = false;
+      const audioCache = {};
+
       const us = {
         _status: 0,
         _count: 0,
@@ -180,6 +183,7 @@
       document.getElementById("beginstart").addEventListener("click",function(event){
         document.getElementById("begindialog").style.display = "none";
         document.getElementById("seconddialog").style.display = "block";
+        audioUnlocked = true;
 
         us.count = 0;
 
@@ -188,11 +192,31 @@
         }, 1000);
       });
 
+      function getAudio(url){
+        if (!audioCache[url]) {
+          audioCache[url] = new Audio(url);
+        }
+        return audioCache[url];
+      }
+
       function speak(msg){
-        var usg = new SpeechSynthesisUtterance(msg);
-        usg.rate = 0.8;
-        usg.pitch = 0.2;
-        window.speechSynthesis.speak(usg);
+        if (!audioUnlocked) return;
+
+        const audioMap = {
+          working: "/audio/working.wav",
+          resting: "/audio/resting.wav",
+          uninitialised: "/audio/resting.wav"
+        };
+
+        const source = audioMap[msg];
+        if (!source) return;
+
+        const audio = getAudio(source);
+        audio.currentTime = 0;
+        audio.volume = 1;
+        audio.play().catch(() => {
+          // Ignore play failures after interaction has already started.
+        });
       }
 
         const canvas = document.getElementById('canvas');
@@ -230,7 +254,7 @@
             canvas.style.opacity = 1 - lightFactor;
             document.getElementById('stars').style.opacity = 1 - (lightFactor * 1.2);
 
-            info.innerText = `Tijd: ${now.getHours()}:${mins.toString().padStart(2, '0')} | Mode: ${us.status} | Git: <?php echo file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . ".git" . DIRECTORY_SEPARATOR . "ORIG_HEAD") ?>`;
+            info.innerText = `Tijd: ${now.getHours()}:${mins.toString().padStart(2, '0')} | Mode: ${us.status} | Git: <?php $gitHash = @file_get_contents(__DIR__ . DIRECTORY_SEPARATOR . ".git" . DIRECTORY_SEPARATOR . "ORIG_HEAD"); echo substr(trim((string) $gitHash), 0, 7); ?>`;
         } 
 
         // Helper functie om kleuren te mengen
