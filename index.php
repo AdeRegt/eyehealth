@@ -338,6 +338,53 @@
         ]
       };
 
+      // Laad opgeslagen instellingen uit localStorage indien beschikbaar
+      const STORAGE_KEY = "eyehealth_config_v1";
+      function loadSavedConfig() {
+        try {
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (saved) {
+            const data = JSON.parse(saved);
+            if (typeof data.workMinutes === 'number' && data.workMinutes > 0) {
+              workDurationSec = data.workMinutes * 60;
+              document.getElementById("work-input").value = data.workMinutes;
+            }
+            if (typeof data.restMinutes === 'number' && data.restMinutes > 0) {
+              restDurationSec = data.restMinutes * 60;
+              document.getElementById("rest-input").value = data.restMinutes;
+            }
+            if (data.workdayConfig) {
+              if (data.workdayConfig.start) {
+                workdayConfig.start = data.workdayConfig.start;
+                document.getElementById("workday-start").value = data.workdayConfig.start;
+              }
+              if (data.workdayConfig.end) {
+                workdayConfig.end = data.workdayConfig.end;
+                document.getElementById("workday-end").value = data.workdayConfig.end;
+              }
+              if (Array.isArray(data.workdayConfig.pauses)) {
+                workdayConfig.pauses = data.workdayConfig.pauses;
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Fout bij laden van instellingen uit localStorage:", e);
+        }
+      }
+
+      function saveConfigToStorage() {
+        try {
+          const data = {
+            workMinutes: Math.round(workDurationSec / 60),
+            restMinutes: Math.round(restDurationSec / 60),
+            workdayConfig: workdayConfig
+          };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        } catch (e) {
+          console.error("Fout bij opslaan in localStorage:", e);
+        }
+      }
+
       // Initialiseer standaard pauzes in de configuratie UI
       function renderPausesConfig() {
         const container = document.getElementById("pauses-config-list");
@@ -363,6 +410,8 @@
         renderPausesConfig();
       });
 
+      // Laad opgeslagen configuratie bij opstarten en render
+      loadSavedConfig();
       renderPausesConfig();
 
       const us = {
@@ -607,6 +656,9 @@
         });
         workdayConfig.pauses = newPauses;
 
+        // Sla direct op in localStorage zodat de gebruiker de volgende keer de waardes behoudt
+        saveConfigToStorage();
+
         document.getElementById("begindialog").style.display = "none";
         document.getElementById("seconddialog").style.display = "block";
         audioUnlocked = true;
@@ -629,9 +681,9 @@
         if (!audioUnlocked) return;
 
         const audioMap = {
-          working: "/audio/working.wav",
-          resting: "/audio/resting.wav",
-          uninitialised: "/audio/resting.wav"
+          working: "/working.wav",
+          resting: "/resting.wav",
+          uninitialised: "/resting.wav"
         };
 
         const source = audioMap[msg];
