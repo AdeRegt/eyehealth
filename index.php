@@ -663,7 +663,24 @@
         document.getElementById("seconddialog").style.display = "block";
         audioUnlocked = true;
 
-        us.count = 0;
+        // Bereken de starttijd op basis van de huidige kloktijd sinds de start van de werkdag
+        const now = new Date();
+        const currentTotalSecs = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+        const startMins = parseTimeToMinutes(workdayConfig.start);
+        const endMins = parseTimeToMinutes(workdayConfig.end);
+        const startTotalSecs = startMins * 60;
+        const endTotalSecs = endMins * 60;
+
+        const cycleDurationSec = workDurationSec + restDurationSec;
+        
+        // Controleer of we binnen de werktijd vallen
+        if (currentTotalSecs >= startTotalSecs && currentTotalSecs <= endTotalSecs) {
+          let elapsedSinceStart = currentTotalSecs - startTotalSecs;
+          us.count = elapsedSinceStart % cycleDurationSec;
+        } else {
+          // Buiten de werktijd: val terug op het oude gedrag (start op 0, of eventueel 120 zoals je voorbeeld)
+          us.count = 0;
+        }
 
         window.setInterval(() => {
           us.count++;
