@@ -82,6 +82,46 @@
         border-color: #87ceeb;
       }
 
+      .flag-grid {
+        display: grid;
+        grid-template-columns: repeat(9, 1fr);
+        gap: 6px;
+        width: 100%;
+        margin-bottom: 12px;
+        max-height: 140px;
+        overflow-y: auto;
+        padding: 4px;
+        background: rgba(0, 0, 0, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        box-sizing: border-box;
+      }
+
+      .flag-item {
+        background: rgba(255, 255, 255, 0.15);
+        border: 2px solid transparent;
+        border-radius: 6px;
+        font-size: 1.5rem;
+        padding: 4px 2px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s, background 0.2s, border-color 0.2s;
+        line-height: 1;
+      }
+
+      .flag-item:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: scale(1.1);
+      }
+
+      .flag-item.selected {
+        border-color: #87ceeb;
+        background: rgba(135, 206, 235, 0.35);
+        transform: scale(1.08);
+      }
+
       .pauses-config-container {
         width: 100%;
         max-height: 120px;
@@ -260,9 +300,17 @@
   <body>
     <div class="dialog" id="begindialog">
       <h1>Eye Health & Werkdag</h1>
-      <p style="margin: 3px 0 10px 0; font-size: 0.85rem; opacity: 0.9;">Configureer pauzes en oog-oefening timers</p>
+      <p style="margin: 3px 0 10px 0; font-size: 0.85rem; opacity: 0.9;" id="setup-subtitle">Configureer pauzes en oog-oefening timers</p>
       
-      <label>
+      <label id="label-lang">
+        Taal / Language (EU):
+      </label>
+      <div class="flag-grid" id="flag-grid" title="Kies een land / Choose country">
+        <!-- Wordt dynamisch gevuld met alle EU lidstaten -->
+      </div>
+      <input type="hidden" id="selected-lang" value="nl">
+
+      <label id="label-work">
         Oog-oefening Werkduur (min):
         <input type="number" id="work-input" value="18" min="1" max="120">
       </label>
@@ -338,13 +386,134 @@
         ]
       };
 
+      let currentLang = "nl";
+
+      // Alle 27 EU-lidstaten met hun vlag, landcode, taalcode en vertalingen voor UI-elementen
+      const euCountries = [
+        { code: "AT", flag: "🇦🇹", lang: "de", name: "Österreich", 
+          translations: { title: "Augengesundheit & Arbeitstag", subtitle: "Pausen und Augenübung-Timer konfigurieren", work: "Arbeitsdauer Augenübung (Min):", rest: "Ruhedauer Augenübung (Min):", startW: "Arbeitsbeginn:", endW: "Arbeitsende:", pausesTitle: "Pausen (Uhrzeit & Dauer in Min):", addPause: "+ Pause hinzufügen", begin: "Starten", rem: "verbleibend", workdayOver: "Arbeitstag vorbei", ready: "Fertig!", evening: "Schönen Abend!" } },
+        { code: "BE", flag: "🇧🇪", lang: "nl", name: "België / Belgique", 
+          translations: { title: "Eye Health & Werkdag", subtitle: "Configureer pauzes en oog-oefening timers", work: "Oog-oefening Werkduur (min):", rest: "Oog-oefening Rustduur (min):", startW: "Start werktijd:", endW: "Eind werktijd:", pausesTitle: "Pauzes (tijdstip & duur in min):", addPause: "+ Pauze toevoegen", begin: "Begin", rem: "resterend", workdayOver: "werkdag voorbij", ready: "Klaar!", evening: "Fijne avond!" } },
+        { code: "BG", flag: "🇧🇬", lang: "bg", name: "България", 
+          translations: { title: "Здраве на очите & Работен ден", subtitle: "Конфигурирайте почивки и таймери за очи", work: "Работно време за очи (мин):", rest: "Време за почивка (мин):", startW: "Начало:", endW: "Край:", pausesTitle: "Почивки (час и времетраене в мин):", addPause: "+ Добави почивка", begin: "Начало", rem: "оставащи", workdayOver: "работният ден приключи", ready: "Готово!", evening: "Приятна вечер!" } },
+        { code: "CY", flag: "🇨🇾", lang: "el", name: "Κύπρος", 
+          translations: { title: "Υγεία Ματιών & Εργάσιμη Ημέρα", subtitle: "Διαμόρφωση διαλειμμάτων και χρονοδιακοπτών", work: "Διάρκεια εργασίας ματιών (min):", rest: "Διάρκεια ανάπαυσης (min):", startW: "Έναρξη:", endW: "Λήξη:", pausesTitle: "Διαλείμματα (ώρα & διάρκεια σε min):", addPause: "+ Προσθήκη διαλείμματος", begin: "Εκκίνηση", rem: "απομένουν", workdayOver: "ημέρα έληξε", ready: "Έτοιμο!", evening: "Καλησπέρα!" } },
+        { code: "CZ", flag: "🇨🇿", lang: "cs", name: "Česko", 
+          translations: { title: "Zdraví očí & Pracovní den", subtitle: "Konfigurace přestávek a časovačů očí", work: "Doba práce očí (min):", rest: "Doba odpočinku (min):", startW: "Začátek:", endW: "Konec:", pausesTitle: "Přestávky (čas a trvání v min):", addPause: "+ Přidat přestávku", begin: "Začít", rem: "zbývá", workdayOver: "pracovní den skončil", ready: "Hotovo!", evening: "Hezký večer!" } },
+        { code: "DE", flag: "🇩🇪", lang: "de", name: "Deutschland", 
+          translations: { title: "Augengesundheit & Arbeitstag", subtitle: "Pausen und Augenübung-Timer konfigurieren", work: "Arbeitsdauer Augenübung (Min):", rest: "Ruhedauer Augenübung (Min):", startW: "Arbeitsbeginn:", endW: "Arbeitsende:", pausesTitle: "Pausen (Uhrzeit & Dauer in Min):", addPause: "+ Pause hinzufügen", begin: "Starten", rem: "verbleibend", workdayOver: "Arbeitstag vorbei", ready: "Fertig!", evening: "Schönen Abend!" } },
+        { code: "DK", flag: "🇩🇰", lang: "da", name: "Danmark", 
+          translations: { title: "Øjensundhed & Arbejdsdag", subtitle: "Konfigurer pauser og øjentraening", work: "Øjenarbejdstid (min):", rest: "Øjenhviletid (min):", startW: "Starttid:", endW: "Sluttid:", pausesTitle: "Pauser (tidspunkt & varighed i min):", addPause: "+ Tilføj pause", begin: "Start", rem: "resterende", workdayOver: "arbejdsdag slut", ready: "Færdig!", evening: "God aften!" } },
+        { code: "EE", flag: "🇪🇪", lang: "et", name: "Eesti", 
+          translations: { title: "Silmade tervis & Tööpäev", subtitle: "Konfigureeri pausid ja silmaharjutuste taimer", work: "Silmade tööaeg (min):", rest: "Puhkeaeg (min):", startW: "Algus:", endW: "Lõpp:", pausesTitle: "Pausid (aeg ja kestus min):", addPause: "+ Lisa paus", begin: "Alusta", rem: "järele", workdayOver: "tööpäev läbi", ready: "Valmis!", evening: "Head õhtut!" } },
+        { code: "ES", flag: "🇪🇸", lang: "es", name: "España", 
+          translations: { title: "Salud Ocular y Jornada", subtitle: "Configura pausas y temporizadores", work: "Trabajo visual (min):", rest: "Descanso visual (min):", startW: "Inicio:", endW: "Fin:", pausesTitle: "Pausas (hora y duración en min):", addPause: "+ Añadir pausa", begin: "Comenzar", rem: "restante", workdayOver: "jornada finalizada", ready: "¡Listo!", evening: "¡Buenas noches!" } },
+        { code: "FI", flag: "🇫🇮", lang: "fi", name: "Suomi", 
+          translations: { title: "Silmien terveys & Työpäivä", subtitle: "Määritä tauot ja silmäjumppa-ajastimet", work: "Silmätyöaika (min):", rest: "Lepoaika (min):", startW: "Aloitus:", endW: "Lopetus:", pausesTitle: "Tauot (aika & kesto min):", addPause: "+ Lisää tauko", begin: "Aloita", rem: "jäljellä", workdayOver: "työpäivä ohi", ready: "Valmis!", evening: "Hyvää iltaa!" } },
+        { code: "FR", flag: "🇫🇷", lang: "fr", name: "France", 
+          translations: { title: "Santé Oculaire & Journée", subtitle: "Configurez les pauses et minuteries", work: "Travail des yeux (min):", rest: "Repos des yeux (min):", startW: "Début:", endW: "Fin:", pausesTitle: "Pauses (heure et durée en min):", addPause: "+ Ajouter une pause", begin: "Commencer", rem: "restant", workdayOver: "journée terminée", ready: "Prêt !", evening: "Bonne soirée !" } },
+        { code: "GR", flag: "🇬🇷", lang: "el", name: "Ελλάδα", 
+          translations: { title: "Υγεία Ματιών & Εργάσιμη Ημέρα", subtitle: "Διαμόρφωση διαλειμμάτων και χρονοδιακοπτών", work: "Διάρκεια εργασίας ματιών (min):", rest: "Διάρκεια ανάπαυσης (min):", startW: "Έναρξη:", endW: "Λήξη:", pausesTitle: "Διαλείμματα (ώρα & διάρκεια σε min):", addPause: "+ Προσθήκη διαλείμματος", begin: "Εκκίνηση", rem: "απομένουν", workdayOver: "ημέρα έληξε", ready: "Έτοιμο!", evening: "Καλησπέρα!" } },
+        { code: "HR", flag: "🇭🇷", lang: "hr", name: "Hrvatska", 
+          translations: { title: "Zdravlje očiju & Radni dan", subtitle: "Konfigurirajte pauze i mjerače vremena", work: "Radno vrijeme očiju (min):", rest: "Vrijeme odmora (min):", startW: "Početak:", endW: "Kraj:", pausesTitle: "Pauze (vrijeme i trajanje u min):", addPause: "+ Dodaj pauzu", begin: "Početak", rem: "preostalo", workdayOver: "radni dan završio", ready: "Gotovo!", evening: "Dobra večer!" } },
+        { code: "HU", flag: "🇭🇺", lang: "hu", name: "Magyarország", 
+          translations: { title: "Szemegészség és Munkanap", subtitle: "Szünetek és szemtorna időzítők beállítása", work: "Szemmunka idő (perc):", rest: "Pihenőidő (perc):", startW: "Kezdés:", endW: "Vége:", pausesTitle: "Szünetek (időpont és tartam percben):", addPause: "+ Szünet hozzáadása", begin: "Indítás", rem: "hátralévő", workdayOver: "munkanap vége", ready: "Kész!", evening: "Jó estét!" } },
+        { code: "IE", flag: "🇮🇪", lang: "en", name: "Éire / Ireland", 
+          translations: { title: "Eye Health & Workday", subtitle: "Configure breaks and eye-exercise timers", work: "Eye-exercise Work Duration (min):", rest: "Eye-exercise Rest Duration (min):", startW: "Workday Start:", endW: "Workday End:", pausesTitle: "Breaks (time & duration in min):", addPause: "+ Add Break", begin: "Begin", rem: "remaining", workdayOver: "workday over", ready: "Ready!", evening: "Good evening!" } },
+        { code: "IT", flag: "🇮🇹", lang: "it", name: "Italia", 
+          translations: { title: "Salute degli Occhi e Giornata", subtitle: "Configura pause e timer esercizi visivi", work: "Lavoro visivo (min):", rest: "Riposo visivo (min):", startW: "Inizio:", endW: "Fine:", pausesTitle: "Pause (ora e durata in min):", addPause: "+ Aggiungi pausa", begin: "Inizia", rem: "rimanente", workdayOver: "giornata terminata", ready: "Pronto!", evening: "Buona sera!" } },
+        { code: "LT", flag: "🇱🇹", lang: "lt", name: "Lietuva", 
+          translations: { title: "Akių sveikata ir darbo diena", subtitle: "Konfigūruokite pertraukas ir akių mankštą", work: "Akių darbo trukmė (min):", rest: "Poilsio trukmė (min):", startW: "Pradžia:", endW: "Pabaiga:", pausesTitle: "Pertraukos (laikas ir trukmė min):", addPause: "+ Pridėti pertrauką", begin: "Pradėti", rem: "liko", workdayOver: "darbo diena baigėsi", ready: "Baigta!", evening: "Gero vakaro!" } },
+        { code: "LU", flag: "🇱🇺", lang: "fr", name: "Lëtzebuerg", 
+          translations: { title: "Santé Oculaire & Journée", subtitle: "Configurez les pauses et minuteries", work: "Travail des yeux (min):", rest: "Repos des yeux (min):", startW: "Début:", endW: "Fin:", pausesTitle: "Pauses (heure et durée en min):", addPause: "+ Ajouter une pause", begin: "Commencer", rem: "restant", workdayOver: "journée terminée", ready: "Prêt !", evening: "Bonne soirée !" } },
+        { code: "LV", flag: "🇱🇻", lang: "lv", name: "Latvija", 
+          translations: { title: "Acu veselība & Darba diena", subtitle: "Konfigurējiet pārtraukumus un acu taimerus", work: "Acu darba ilgums (min):", rest: "Atpūtas ilgums (min):", startW: "Sākums:", endW: "Beigas:", pausesTitle: "Pārtraukumi (laiks un ilgums min):", addPause: "+ Pievienot pārtraukumu", begin: "Sākt", rem: "atlikis", workdayOver: "darba diena beigusies", ready: "Gatavs!", evening: "Labvakar!" } },
+        { code: "MT", flag: "🇲🇹", lang: "en", name: "Malta", 
+          translations: { title: "Eye Health & Workday", subtitle: "Configure breaks and eye-exercise timers", work: "Eye-exercise Work Duration (min):", rest: "Eye-exercise Rest Duration (min):", startW: "Workday Start:", endW: "Workday End:", pausesTitle: "Breaks (time & duration in min):", addPause: "+ Add Break", begin: "Begin", rem: "remaining", workdayOver: "workday over", ready: "Ready!", evening: "Good evening!" } },
+        { code: "NL", flag: "🇳🇱", lang: "nl", name: "Nederland", 
+          translations: { title: "Eye Health & Werkdag", subtitle: "Configureer pauzes en oog-oefening timers", work: "Oog-oefening Werkduur (min):", rest: "Oog-oefening Rustduur (min):", startW: "Start werktijd:", endW: "Eind werktijd:", pausesTitle: "Pauzes (tijdstip & duur in min):", addPause: "+ Pauze toevoegen", begin: "Begin", rem: "resterend", workdayOver: "werkdag voorbij", ready: "Klaar!", evening: "Fijne avond!" } },
+        { code: "PL", flag: "🇵🇱", lang: "pl", name: "Polska", 
+          translations: { title: "Zdrowie Oczu & Dzień Pracy", subtitle: "Skonfiguruj przerwy i timery ćwiczeń", work: "Czas pracy oczu (min):", rest: "Czas odpoczynku (min):", startW: "Początek:", endW: "Koniec:", pausesTitle: "Przerwy (godzina i czas trwania w min):", addPause: "+ Dodaj przerwę", begin: "Start", rem: "pozostało", workdayOver: "dzień pracy minął", ready: "Gotowe!", evening: "Miłego wieczoru!" } },
+        { code: "PT", flag: "🇵🇹", lang: "pt", name: "Portugal", 
+          translations: { title: "Saúde Ocular e Dia de Trabalho", subtitle: "Configurar pausas e temporizadores", work: "Trabalho visual (min):", rest: "Descanso visual (min):", startW: "Início:", endW: "Fim:", pausesTitle: "Pausas (hora e duração em min):", addPause: "+ Adicionar pausa", begin: "Começar", rem: "restante", workdayOver: "dia de trabalho terminado", ready: "Pronto!", evening: "Boa noite!" } },
+        { code: "RO", flag: "🇷🇴", lang: "ro", name: "România", 
+          translations: { title: "Sănătatea Ochilor & Ziua de Lucru", subtitle: "Configurați pauzele și cronometrele", work: "Timp de lucru pentru ochi (min):", rest: "Timp de odihnă (min):", startW: "Început:", endW: "Sfârșit:", pausesTitle: "Pauze (oră și durată în min):", addPause: "+ Adăugați pauză", begin: "Începe", rem: "rămas", workdayOver: "zi de lucru încheiată", ready: "Gata!", evening: "Bună seara!" } },
+        { code: "SE", flag: "🇸🇪", lang: "sv", name: "Sverige", 
+          translations: { title: "Ögonhälsa & Arbetsdag", subtitle: "Konfigurera pauser och ögonövningstimer", work: "Ögonarbetstid (min):", rest: "Ögonvilotid (min):", startW: "Arbetstid start:", endW: "Arbetstid slut:", pausesTitle: "Pauser (tid & varaktighet i min):", addPause: "+ Lägg till paus", begin: "Börja", rem: "återstående", workdayOver: "arbetsdagen slut", ready: "Klar!", evening: "God kväll!" } },
+        { code: "SI", flag: "🇸🇮", lang: "sl", name: "Slovenija", 
+          translations: { title: "Zdravje oči & Delovni dan", subtitle: "Konfigurirajte odmore in merilnike časa", work: "Čas dela za oči (min):", rest: "Čas počitka (min):", startW: "Začetek:", endW: "Konec:", pausesTitle: "Odmori (čas in trajanje v min):", addPause: "+ Dodaj odmor", begin: "Začni", rem: "preostalo", workdayOver: "delovni dan končan", ready: "Končano!", evening: "Dober večer!" } },
+        { code: "SK", flag: "🇸🇰", lang: "sk", name: "Slovensko", 
+          translations: { title: "Zdravie očí & Pracovný deň", subtitle: "Konfigurácia prestávok a časovačov", work: "Pracovný čas očí (min):", rest: "Čas odpočinku (min):", startW: "Začiatok:", endW: "Koniec:", pausesTitle: "Prestávky (čas a trvanie v min):", addPause: "+ Pridať prestávku", begin: "Začať", rem: "zostáva", workdayOver: "pracovný deň skončil", ready: "Hotovo!", evening: "Pekný večer!" } }
+      ];
+
+      function renderFlagGrid() {
+        const grid = document.getElementById("flag-grid");
+        if (!grid) return;
+        grid.innerHTML = "";
+        euCountries.forEach(c => {
+          const item = document.createElement("div");
+          item.className = "flag-item" + (c.lang === currentLang ? " selected" : "");
+          item.setAttribute("title", `${c.name} (${c.lang.toUpperCase()})`);
+          item.innerText = c.flag;
+          item.addEventListener("click", () => {
+            currentLang = c.lang;
+            document.getElementById("selected-lang").value = currentLang;
+            document.documentElement.lang = currentLang;
+            document.querySelectorAll(".flag-item").forEach(el => el.classList.remove("selected"));
+            item.classList.add("selected");
+            applyTranslations(c.translations);
+          });
+          grid.appendChild(item);
+        });
+      }
+
+      function applyTranslations(t) {
+        if (!t) return;
+        const h1 = document.querySelector("#begindialog h1");
+        if (h1) h1.innerText = t.title;
+        const sub = document.getElementById("setup-subtitle");
+        if (sub) sub.innerText = t.subtitle;
+        const lWork = document.getElementById("label-work");
+        if (lWork) {
+          // Behouden de input
+          const input = document.getElementById("work-input");
+          lWork.childNodes[0].textContent = t.work + " ";
+        }
+        const lRest = document.querySelector("#begindialog label:nth-of-type(3)");
+        if (lRest) {
+          lRest.childNodes[0].textContent = t.rest + " ";
+        }
+        const lStart = document.getElementById("workday-start");
+        if (lStart && lStart.previousSibling) {
+          lStart.previousSibling.textContent = t.startW + " ";
+        }
+        const lEnd = document.getElementById("workday-end");
+        if (lEnd && lEnd.previousSibling) {
+          lEnd.previousSibling.textContent = t.endW + " ";
+        }
+        const pausesLabel = document.querySelector("#begindialog label:nth-of-type(6)");
+        if (pausesLabel) pausesLabel.innerText = t.pausesTitle;
+        const addBtn = document.getElementById("add-pause-btn");
+        if (addBtn) addBtn.innerText = t.addPause;
+        const beginBtn = document.getElementById("beginstart");
+        if (beginBtn) beginBtn.innerText = t.begin;
+      }
+
+      // Initialiseer vlaggenraster bij start
+      renderFlagGrid();
+
       // Laad opgeslagen instellingen uit localStorage indien beschikbaar
       const STORAGE_KEY = "eyehealth_config_v1";
       function loadSavedConfig() {
         try {
           const saved = localStorage.getItem(STORAGE_KEY);
+          let loaded = false;
           if (saved) {
             const data = JSON.parse(saved);
+            if (data.lang) {
+              currentLang = data.lang;
+              loaded = true;
+            }
             if (typeof data.workMinutes === 'number' && data.workMinutes > 0) {
               workDurationSec = data.workMinutes * 60;
               document.getElementById("work-input").value = data.workMinutes;
@@ -367,6 +536,33 @@
               }
             }
           }
+
+          if (!loaded) {
+            // Probeer browserstaal te detecteren (bijv. 'nl-NL', 'en-US', 'de', etc.)
+            const browserLang = (navigator.language || navigator.userLanguage || "nl").toLowerCase();
+            const langCode = browserLang.split('-')[0];
+            
+            // Zoek een overeenkomende EU-lidstaat op basis van taalcode
+            const matchedByLang = euCountries.find(c => c.lang === langCode);
+            if (matchedByLang) {
+              currentLang = matchedByLang.lang;
+            } else {
+              // Probeer op basis van landcode/regio indien beschikbaar in navigator.languages of navigator.language
+              const regionMatch = euCountries.find(c => browserLang.includes(c.code.toLowerCase()));
+              if (regionMatch) {
+                currentLang = regionMatch.lang;
+              } else {
+                currentLang = "nl"; // Standaard fallback
+              }
+            }
+          }
+
+          document.getElementById("selected-lang").value = currentLang;
+          const activeCountry = euCountries.find(c => c.lang === currentLang) || euCountries.find(c => c.code === "NL");
+          if (activeCountry) {
+            applyTranslations(activeCountry.translations);
+            renderFlagGrid();
+          }
         } catch (e) {
           console.error("Fout bij laden van instellingen uit localStorage:", e);
         }
@@ -375,6 +571,7 @@
       function saveConfigToStorage() {
         try {
           const data = {
+            lang: currentLang,
             workMinutes: Math.round(workDurationSec / 60),
             restMinutes: Math.round(restDurationSec / 60),
             workdayConfig: workdayConfig
