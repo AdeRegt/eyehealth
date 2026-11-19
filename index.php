@@ -388,6 +388,55 @@
 
       let currentLang = "nl";
 
+      // Notificatieteksten per taal (rest = werk-timer klaar, werk = rust-timer klaar)
+      const notifTexts = {
+        nl: { restTitle: "Tijd voor een pauze! ☕", restBody: "De werk-timer is klaar. Kijk ver weg en ontspan je ogen.", workTitle: "Pauze voorbij ⏰", workBody: "De rust is voorbij, tijd om weer te werken." },
+        en: { restTitle: "Time for a break! ☕", restBody: "The work timer is done. Look far away and relax your eyes.", workTitle: "Break over ⏰", workBody: "Rest is over, time to get back to work." },
+        de: { restTitle: "Zeit für eine Pause! ☕", restBody: "Der Arbeits-Timer ist fertig. Schau in die Ferne und entspanne deine Augen.", workTitle: "Pause vorbei ⏰", workBody: "Die Pause ist vorbei, Zeit wieder zu arbeiten." },
+        fr: { restTitle: "C'est l'heure de la pause ! ☕", restBody: "Le minuteur de travail est terminé. Regardez au loin et détendez vos yeux.", workTitle: "Pause terminée ⏰", workBody: "Le repos est terminé, il est temps de retravailler." },
+        es: { restTitle: "¡Hora de un descanso! ☕", restBody: "El temporizador de trabajo ha terminado. Mira lejos y relaja tus ojos.", workTitle: "Descanso terminado ⏰", workBody: "El descanso ha terminado, hora de volver al trabajo." },
+        it: { restTitle: "È ora di una pausa! ☕", restBody: "Il timer di lavoro è finito. Guarda lontano e rilassa gli occhi.", workTitle: "Pausa finita ⏰", workBody: "Il riposo è finito, torna al lavoro." },
+        pt: { restTitle: "Hora de uma pausa! ☕", restBody: "O temporizador de trabalho terminou. Olhe para longe e relaxe os olhos.", workTitle: "Pausa terminada ⏰", workBody: "O descanso acabou, hora de voltar ao trabalho." },
+        da: { restTitle: "Tid til en pause! ☕", restBody: "Arbejdstimeren er færdig. Kig i det fjerne og slap øjnene af.", workTitle: "Pause slut ⏰", workBody: "Pausen er slut, tid til at arbejde igen." },
+        sv: { restTitle: "Dags för en paus! ☕", restBody: "Arbetstimer är klar. Titta långt bort och vila ögonen.", workTitle: "Pausen slut ⏰", workBody: "Vilan är över, dags att jobba igen." },
+        fi: { restTitle: "Tauon aika! ☕", restBody: "Työajastin on valmis. Katso kauas ja lepää silmiä.", workTitle: "Tauko ohi ⏰", workBody: "Lepo on ohi, aika palata töihin." },
+        el: { restTitle: "Ώρα για διάλειμμα! ☕", restBody: "Ο χρονοδιακόπτης εργασίας τελείωσε. Κοιτάξτε μακριά και χαλαρώστε τα μάτια.", workTitle: "Τέλος διαλείμματος ⏰", workBody: "Η ξεκούραση τελείωσε, ώρα για δουλειά." },
+        bg: { restTitle: "Време за почивка! ☕", restBody: "Работният таймер приключи. Погледнете далеч и отпуснете очи.", workTitle: "Почивката свърши ⏰", workBody: "Почивката приключи, време за работа." },
+        cs: { restTitle: "Čas na pauzu! ☕", restBody: "Pracovní časovač skončil. Podívejte se daleko a relaxujte oči.", workTitle: "Konec pauzy ⏰", workBody: "Odpočinek skončil, čas zpět do práce." },
+        sk: { restTitle: "Čas na prestávku! ☕", restBody: "Pracovný časovač skončil. Pozrite sa ďaleko a relaxujte oči.", workTitle: "Koniec prestávky ⏰", workBody: "Odpočinok skončil, čas ísť do práce." },
+        pl: { restTitle: "Czas na przerwę! ☕", restBody: "Minutnik pracy zakończony. Popatrz w dal i odpręż oczy.", workTitle: "Koniec przerwy ⏰", workBody: "Odpoczynek się skończył, czas do pracy." },
+        hu: { restTitle: "Szünet ideje! ☕", restBody: "A munkaidőzítő lejárt. Nézz a távolba és pihentesd a szemed.", workTitle: "A szünet vége ⏰", workBody: "A pihenő véget ért, ideje dolgozni." },
+        ro: { restTitle: "E timpul pentru o pauză! ☕", restBody: "Cronometrul de lucru s-a terminat. Privește în depărtare și relaxează ochii.", workTitle: "Pauza s-a încheiat ⏰", workBody: "Odihna s-a terminat, timpul să lucrezi." },
+        hr: { restTitle: "Vrijeme je za pauzu! ☕", restBody: "Radni timer je završio. Pogledaj u daljinu i opusti oči.", workTitle: "Pauza je završila ⏰", workBody: "Odmor je završio, vrijeme je za rad." },
+        sl: { restTitle: "Čas je za odmor! ☕", restBody: "Delovni časovnik je končan. Poglej v daljavo in sprosti oči.", workTitle: "Odmor je končan ⏰", workBody: "Počitek je končan, čas je za delo." },
+        et: { restTitle: "Pausi aeg! ☕", restBody: "Töötaimer on valmis. Vaata kaugele ja lase silmade puhata.", workTitle: "Paus läbi ⏰", workBody: "Puhkus on läbi, aeg tööd jätkata." },
+        lt: { restTitle: "Pertraukos laikas! ☕", restBody: "Darbo laikmatį baigėsi. Pažiūrėkite tolyn ir pailsėkite akis.", workTitle: "Pertrauka baigėsi ⏰", workBody: "Poilsis baigėsi, laikas grįžti prie darbo." }
+      };
+
+      let notifArmed = false;
+
+      const NOTIF_ICON = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23050b1a' width='192' height='192'/><circle cx='96' cy='96' r='60' fill='%2387ceeb'/><circle cx='96' cy='96' r='40' fill='%230c0d46'/><circle cx='96' cy='96' r='20' fill='white'/></svg>";
+
+      function sendPhaseNotification(phase) {
+        if (typeof Notification === "undefined" || Notification.permission !== "granted" || !audioUnlocked) return;
+        const t = notifTexts[currentLang] || notifTexts.nl;
+        const isRest = phase === "resting";
+        try {
+          const notif = new Notification(isRest ? t.restTitle : t.workTitle, {
+            body: isRest ? t.restBody : t.workBody,
+            icon: NOTIF_ICON,
+            tag: "eyehealth-phase", // vervangt eerdere fase-notificatie
+            silent: true // audio speelt al via working.wav/resting.wav
+          });
+          notif.addEventListener("click", () => {
+            window.focus();
+            notif.close();
+          });
+        } catch (e) {
+          console.error("Notificatie kon niet worden getoond:", e);
+        }
+      }
+
       // Alle 27 EU-lidstaten met hun vlag, landcode, taalcode en vertalingen voor UI-elementen
       const euCountries = [
         { code: "AT", flag: "🇦🇹", lang: "de", name: "Österreich", 
@@ -622,6 +671,11 @@
         set status(e){
           if(e!=this._status){
             speak(e);
+            // Notificatie alleen als een werk- of rust-timer daadwerkelijk is afgelopen
+            // (dus niet bij de allereerste overgang van "uninitialised")
+            if (notifArmed && (this._status === "working" || this._status === "resting")) {
+              sendPhaseNotification(e);
+            }
           }
           this._status = e;
           document.getElementById("status").innerHTML = e;
@@ -855,6 +909,14 @@
 
         // Sla direct op in localStorage zodat de gebruiker de volgende keer de waardes behoudt
         saveConfigToStorage();
+
+        // Vraag toestemming voor notificaties (moet via gebruikersinteractie)
+        if (typeof Notification !== "undefined" && Notification.permission === "default") {
+          Notification.requestPermission().then(perm => {
+            if (perm !== "granted") console.log("Notificatie-permissie geweigerd");
+          });
+        }
+        notifArmed = true;
 
         document.getElementById("begindialog").style.display = "none";
         document.getElementById("seconddialog").style.display = "block";
